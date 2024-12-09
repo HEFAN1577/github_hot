@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub 热门项目</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+    .filters {
+        margin-bottom: 20px;
+    }
+
+    .filters form {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        align-items: flex-end;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .form-group label {
+        font-size: 14px;
+        color: #666;
+    }
+
+    select {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        min-width: 120px;
+        background-color: white;
+    }
+
+    button[type="submit"] {
+        padding: 8px 20px;
+        background-color: #0366d6;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        height: 35px;
+    }
+
+    button[type="submit"]:hover {
+        background-color: #0255b3;
+    }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>GitHub 热门项目</h1>
+        <p class="update-time">最后更新时间：{{ repos[0].updated_at if repos else 'N/A' }}</p>
+        
+        <div class="filters">
+            <form action="/" method="get">
+                <div class="form-group">
+                    <label for="language-select">编程语言：</label>
+                    <select id="language-select" name="language" aria-label="选择编程语言">
+                        <option value="all" {% if current_language == 'all' %}selected{% endif %}>所有语言</option>
+                        <option value="python" {% if current_language == 'python' %}selected{% endif %}>Python</option>
+                        <option value="javascript" {% if current_language == 'javascript' %}selected{% endif %}>JavaScript</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="date-select">查看历史：</label>
+                    <select id="date-select" name="date" aria-label="选择日期">
+                        <option value="">最新数据</option>
+                        {% for date in available_dates %}
+                        <option value="{{ date }}" {% if current_date == date %}selected{% endif %}>
+                            {{ date }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <button type="submit">筛选</button>
+            </form>
+        </div>
+        
+        <div class="repos">
+            {% for repo in repos %}
+            <div class="repo-card">
+                <h2><a href="{{ repo.url }}" target="_blank">{{ repo.name }}</a></h2>
+                <p class="description">{{ repo.description }}</p>
+                <div class="topics">
+                    {% for topic in repo.topics.split(',') if repo.topics %}
+                    <span class="topic">{{ topic }}</span>
+                    {% endfor %}
+                </div>
+                <div class="stats">
+                    <span>⭐ {{ repo.stars }}</span>
+                    <span>创建于: {{ repo.created_at.split('T')[0] }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="pagination">
+            {% if pagination.total_pages > 1 %}
+                <!-- 首页 -->
+                {% if pagination.current_page > 1 %}
+                    <a href="?language={{ current_language }}&date={{ current_date }}&page=1" class="page-link">首页</a>
+                {% endif %}
+                
+                <!-- 上一页 -->
+                {% if pagination.current_page > 1 %}
+                    <a href="?language={{ current_language }}&date={{ current_date }}&page={{ pagination.current_page - 1 }}" class="page-link">上一页</a>
+                {% endif %}
+                
+                <!-- 页码信息 -->
+                <span class="page-info">
+                    {{ pagination.current_page }} / {{ pagination.total_pages }}
+                    (共 {{ pagination.total_count }} 个项目)
+                </span>
+                
+                <!-- 下一页 -->
+                {% if pagination.current_page < pagination.total_pages %}
+                    <a href="?language={{ current_language }}&date={{ current_date }}&page={{ pagination.current_page + 1 }}" class="page-link">下一页</a>
+                {% endif %}
+                
+                <!-- 末页 -->
+                {% if pagination.current_page < pagination.total_pages %}
+                    <a href="?language={{ current_language }}&date={{ current_date }}&page={{ pagination.total_pages }}" class="page-link">末页</a>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html> 
